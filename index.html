@@ -81,11 +81,12 @@
         const A4_HEIGHT = 841.89;
 
         function getResizeParametersForSourceImage(image) {
-          if (isSquare(image)) {
-            console.log("isSquare");
-            return {width: A4_WIDTH, height: A4_HEIGHT};
-          };
+          // if (isSquare(image)) {
+          //   console.log("isSquare");
+          //   return {width: A4_PORTRAT_WIDTH, height: A4_PORTRAT_HEIGHT};
+          // };
 
+          debugger;
           if (isPortrait(image)) {
             console.log("isPortrait");
             return { height: A4_HEIGHT, preserveAspectRatio: true};
@@ -117,6 +118,20 @@
               .all(
                   Array
                   .from(this.files)
+                  .sort((a, b) => {
+                    const aNumber = Number(a.name.substr(0, a.name.lastIndexOf(".")));
+                    const bNumber = Number(b.name.substr(0, b.name.lastIndexOf(".")));
+                    
+                    if (isNaN(aNumber)) 
+                    {
+                      alert("aNumber");
+                    }
+                    if (isNaN(bNumber)) 
+                    {
+                      alert("bNumber")
+                    }
+                    return aNumber - bNumber;
+                  })
                   .map(file => readAsObjectURL(file)))
               .then(values => {
                   pdfMake.fonts = {
@@ -129,8 +144,9 @@
                     values.map(value => {
                       return imagejsImage.load(value.content).then(image => {
                         debugger;
-                        const finalOutput = image.resize({...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor"}); 
-                        console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
+                        const finalOutput = image;
+                        // const finalOutput = image.resize({...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor"}); 
+                        // console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
                         debugger;
                         // .crop({
                         //   x: 150,
@@ -144,6 +160,8 @@
                         return ({
                           ...value, 
                           content: finalOutput.toDataURL("image/jpeg", { useCanvas: true }),
+                          // width: finalOutput.width,
+                          // height: finalOutput.height,
                           shouldBeLandscape: isLandscape(finalOutput)
                         });
                       })
@@ -151,17 +169,25 @@
                   )
               })
               .then(values => {
-                 
                   var docDefinition = {
+                    pageOrientation: !!values[0].shouldBeLandscape ? 'landscape' : 'portrait', 
                     background: function(currentPage, pageSize) {
                       console.log(`page ${currentPage} with size ${pageSize.width} x ${pageSize.height}`);
                       const value = values[currentPage - 1];
-                      debugger;
                       return {
-                        image: value.content
+                        image: value.content, 
+                        fit: [pageSize.width, pageSize.height],
+                        //cover: { width: , height: , valign: "center", align: "center" }
                       }
                     },
-                    content: values.map(value => ({text: "", pageOrientation: !!value.shouldBeLandscape ? 'landscape' : 'portrait'}))
+                    content: values.map((value, index) => {
+                      debugger
+                      return {
+                        text: "", 
+                        pageOrientation: !!value.shouldBeLandscape ? 'landscape' : 'portrait', 
+                        pageBreak: index > 0 ? 'before' : undefined 
+                      };
+                    })
                     // pageBreakBefore: function(currentNode, followingNodesOnPage, nodesOnNextPage, previousNodesOnPage) {
                     //   debugger;pages
                     //   const value = values[currentPage - 1];
