@@ -65,6 +65,38 @@
           setup();
         })
 
+
+        function isSquare(image) {
+          return image.width == image.height;
+        }
+
+        function isPortrait(image) {
+          return image.width < image.height;
+        }
+        function isLandscape (image) {
+          return image.width > image.height;
+        }
+
+        const A4_WIDTH = 595.28;
+        const A4_HEIGHT = 841.89;
+
+        function getResizeParametersForSourceImage(image) {
+          if (isSquare(image)) {
+            console.log("isSquare");
+            return {width: A4_WIDTH, height: A4_HEIGHT};
+          };
+
+          if (isPortrait(image)) {
+            console.log("isPortrait");
+            return { height: A4_HEIGHT, preserveAspectRatio: true};
+          };
+
+          if (isLandscape(image)) {
+            console.log("isLandscape");
+            return { width: A4_WIDTH, preserveAspectRatio: true};
+          };
+        }
+
         const readAsObjectURL = file => new Promise(resolve => {
             const reader = new FileReader();
 
@@ -95,8 +127,11 @@
 
                   return Promise.all(
                     values.map(value => {
-                      return imagejsImage.load(value.content).then(output => {
-                      
+                      return imagejsImage.load(value.content).then(image => {
+                        debugger;
+                        const finalOutput = image.resize({...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor"}); 
+                        console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
+                        debugger;
                         // .crop({
                         //   x: 150,
                         //   y: 150,
@@ -105,13 +140,11 @@
                         // })
 
                         //  595.28 x 841.89
+                        
                         return ({
                           ...value, 
-                          content: output.resize({
-                            width: 595.28
-                            //841.89
-                          })
-                          .toDataURL("image/jpeg", { useCanvas: true })
+                          content: finalOutput.toDataURL("image/jpeg", { useCanvas: true }),
+                          shouldBeLandscape: isLandscape(finalOutput)
                         });
                       })
                     })
@@ -122,11 +155,18 @@
                   var docDefinition = {
                     background: function(currentPage, pageSize) {
                       console.log(`page ${currentPage} with size ${pageSize.width} x ${pageSize.height}`);
-                      
+                      const value = values[currentPage - 1];
+                      debugger;
                       return {
-                        image: values[currentPage - 1].content
+                        image: value.content
                       }
-                    }
+                    },
+                    content: values.map(value => ({text: "", pageOrientation: !!value.shouldBeLandscape ? 'landscape' : 'portrait'}))
+                    // pageBreakBefore: function(currentNode, followingNodesOnPage, nodesOnNextPage, previousNodesOnPage) {
+                    //   debugger;pages
+                    //   const value = values[currentPage - 1];
+                    //   return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+                    // }
                     // content: [
                     //   'First paragraph',
                     //   'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.'
