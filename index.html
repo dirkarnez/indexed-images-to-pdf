@@ -143,20 +143,10 @@
                   return Promise.all(
                     values.map(value => {
                       return imagejsImage.load(value.content).then(image => {
-                        debugger;
-                        const finalOutput = image;
-                        // const finalOutput = image.resize({...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor"}); 
-                        // console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
-                        debugger;
-                        // .crop({
-                        //   x: 150,
-                        //   y: 150,
-                        //   width : image.width / 2,
-                        //   height: image.height / 2
-                        // })
+                        // make file smaller
+                        const finalOutput = image.resize({...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor"}); 
+                        console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
 
-                        //  595.28 x 841.89
-                        
                         return ({
                           ...value, 
                           content: finalOutput.toDataURL("image/jpeg", { useCanvas: true }),
