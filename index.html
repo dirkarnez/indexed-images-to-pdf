@@ -3,6 +3,7 @@
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <script src="./blob-stream.js"></script>
   </head>
   <body>
     <!-- <img
@@ -12,11 +13,14 @@
     <img id="result" /> -->
     
     <input type="file" id="input" multiple>
+    <br>
+    <iframe width="1000" height="1500"></iframe>
+    <script src="./pdfkit.standalone.js"></script>
 
     <script>
       (() => {
         var imagejsImage;
-        var pdfMake;
+        // var pdfMake;
 
         function loadScript(src) {
           return fetch(src)
@@ -47,19 +51,19 @@
               imagejsImage = imagejs.Image;
               return Promise.resolve();
             }
-          }),
-          loadScript("./pdfmake.0.2.10.min.js")
-          .then(jsCode => {
-            eval(jsCode);
-            if (!!pdfmake) {
-              // https://pdfmake.github.io/docs/0.1/getting-started/client-side/
-              // (<any>pdfMake).vfs = pdfFonts.pdfMake.vfs;
-                pdfmake.pdfMake.vfs = pdfmake.pdfFonts.pdfMake.vfs;
-              // process(pdfmake.pdfMake);
-              pdfMake = pdfmake.pdfMake;
-              return Promise.resolve();
-            }
           })
+          // ,loadScript("./pdfmake.0.2.10.min.js")
+          // .then(jsCode => {
+          //   eval(jsCode);
+          //   if (!!pdfmake) {
+          //     // https://pdfmake.github.io/docs/0.1/getting-started/client-side/
+          //     // (<any>pdfMake).vfs = pdfFonts.pdfMake.vfs;
+          //       pdfmake.pdfMake.vfs = pdfmake.pdfFonts.pdfMake.vfs;
+          //     // process(pdfmake.pdfMake);
+          //     pdfMake = pdfmake.pdfMake;
+          //     return Promise.resolve();
+          //   }
+          // })
         ])
         .then(() => {
           setup();
@@ -134,11 +138,11 @@
                   })
                   .map(file => readAsObjectURL(file)))
               .then(values => {
-                  pdfMake.fonts = {
-                    Times: {
-                      normal: 'https://fonts.cdnfonts.com/s/57197/times.woff'
-                    }
-                  };
+                  // pdfMake.fonts = {
+                  //   Times: {
+                  //     normal: 'https://fonts.cdnfonts.com/s/57197/times.woff'
+                  //   }
+                  // };
 
                   return Promise.all(
                     values.map(value => {
@@ -150,8 +154,8 @@
                         return ({
                           ...value, 
                           content: finalOutput.toDataURL("image/jpeg", { useCanvas: true }),
-                          // width: finalOutput.width,
-                          // height: finalOutput.height,
+                          width: finalOutput.width,
+                          height: finalOutput.height,
                           shouldBeLandscape: isLandscape(finalOutput)
                         });
                       })
@@ -159,40 +163,64 @@
                   )
               })
               .then(values => {
-                  var docDefinition = {
-                    pageOrientation: !!values[0].shouldBeLandscape ? 'landscape' : 'portrait', 
-                    background: function(currentPage, pageSize) {
-                      console.log(`page ${currentPage} with size ${pageSize.width} x ${pageSize.height}`);
-                      const value = values[currentPage - 1];
-                      return {
-                        image: value.content, 
-                        fit: [pageSize.width, pageSize.height],
-                        //cover: { width: , height: , valign: "center", align: "center" }
-                      }
-                    },
-                    content: values.map((value, index) => {
-                      debugger
-                      return {
-                        text: "", 
-                        pageOrientation: !!value.shouldBeLandscape ? 'landscape' : 'portrait', 
-                        pageBreak: index > 0 ? 'before' : undefined 
-                      };
-                    })
-                    // pageBreakBefore: function(currentNode, followingNodesOnPage, nodesOnNextPage, previousNodesOnPage) {
-                    //   debugger;pages
-                    //   const value = values[currentPage - 1];
-                    //   return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
-                    // }
-                    // content: [
-                    //   'First paragraph',
-                    //   'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.'
-                    // ],
-                    // defaultStyle: {
-                    //   font: 'Times'
-                    // }
-                  };
+                const iframe = document.querySelector('iframe');
 
-                  pdfMake.createPdf(docDefinition).download('document.pdf');  
+                var stream = undefined;
+                const doc = values.slice(1).reduce((doc, current) => {
+                  debugger;
+                  return doc
+                  .addPage({size: [current.width, current.height]})
+                  .image(current.content, 0, 0, {fit: [current.width, current.height], align: 'center', valign: 'center'});
+                }, (() => {
+                  var doc = new PDFDocument({size: [values[0].width, values[0].height]});
+                  stream = doc.pipe(blobStream());
+                  doc.image(values[0].content, 0, 0, {fit: [values[0].width, values[0].height], align: 'center', valign: 'center'});
+                  return doc;
+                })())
+                doc.end();
+
+                stream.on('finish', function () {
+                    iframe.src = stream.toBlobURL('application/pdf');
+                });
+
+                debugger;
+
+
+
+                  // var docDefinition = {
+                  //   pageOrientation: !!values[0].shouldBeLandscape ? 'landscape' : 'portrait', 
+                  //   background: function(currentPage, pageSize) {
+                  //     console.log(`page ${currentPage} with size ${pageSize.width} x ${pageSize.height}`);
+                  //     const value = values[currentPage - 1];
+                  //     return {
+                  //       image: value.content, 
+                  //       fit: [pageSize.width, pageSize.height],
+                  //       //cover: { width: , height: , valign: "center", align: "center" }
+                  //     }
+                  //   },
+                  //   content: values.map((value, index) => {
+                  //     debugger
+                  //     return {
+                  //       text: "", 
+                  //       pageOrientation: !!value.shouldBeLandscape ? 'landscape' : 'portrait', 
+                  //       pageBreak: index > 0 ? 'before' : undefined 
+                  //     };
+                  //   })
+                  //   // pageBreakBefore: function(currentNode, followingNodesOnPage, nodesOnNextPage, previousNodesOnPage) {
+                  //   //   debugger;pages
+                  //   //   const value = values[currentPage - 1];
+                  //   //   return currentNode.headlineLevel === 1 && followingNodesOnPage.length === 0;
+                  //   // }
+                  //   // content: [
+                  //   //   'First paragraph',
+                  //   //   'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.'
+                  //   // ],
+                  //   // defaultStyle: {
+                  //   //   font: 'Times'
+                  //   // }
+                  // };
+
+                  // pdfMake.createPdf(docDefinition).download('document.pdf');  
               });
           });
         }
