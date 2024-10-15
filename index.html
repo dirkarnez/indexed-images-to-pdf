@@ -153,10 +153,10 @@
 
                         return ({
                           ...value, 
-                          content: finalOutput.toDataURL("image/jpeg", { useCanvas: true }),
-                          width: finalOutput.width,
-                          height: finalOutput.height,
-                          shouldBeLandscape: isLandscape(finalOutput)
+                          content: image.toDataURL("image/jpeg", { useCanvas: true }),
+                          width: image.width,
+                          height: image.height,
+                          shouldBeLandscape: isLandscape(image)
                         });
                       })
                     })
