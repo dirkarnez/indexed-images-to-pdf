@@ -4,7 +4,7 @@
 - [pdfmake](http://pdfmake.org/) does not support set page size for each page, therefore i use [PDFKit](https://pdfkit.org/) instead
 
 ### TODOs
-- [ ] Sortable on UI
+- [ ] Sortable on UI (using signal.js)
   - ```html
     <!DOCTYPE html>
     <html>
