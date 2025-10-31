@@ -13,6 +13,7 @@
       height: 1000px;
     }
   </style>
+  <script src="./signals.min.js"></script>
 </head>
 
 <body>
@@ -21,6 +22,7 @@
       src="https://www.lactame.com/github/image-js/image-js/3073b80c7d626196cb669f9d617f491a8338ca66/test/img/taxi/original.jpeg"
     />
     <img id="result" /> -->
+  <a href="https://github.com/dirkarnez/indexed-images-to-pdf" target="_blank">dirkarnez/indexed-images-to-pdf</a><br>
   <div class="container-fluid p-5">
     <div class="row">
       <div class="col">
@@ -93,7 +95,7 @@
       }
 
       function isPortrait(image) {
-        return image.width < image.height;
+        return image.width <= image.height; // add = to eliminate square case
       }
       function isLandscape(image) {
         return image.width > image.height;
@@ -242,6 +244,26 @@
       }
     })();
   </script>
+
+  <!--
+  <script>
+    const Signal = signals.Signal;
+    //custom object that dispatch signals
+    var myCalculator = {
+      calcuationDone : new Signal() //past tense is the recommended signal naming convention
+    };
+    
+    function onCalcuationDone(answer){
+      alert(answer);
+    }
+    
+    myCalculator.calcuationDone.add(onCalcuationDone); //add listener
+    myCalculator.calcuationDone.dispatch(Math.exp(1)); //dispatch signal passing custom parameters
+    myCalculator.calcuationDone.remove(onCalcuationDone); //remove a single listener
+
+  </script>
+  -->
+  
 </body>
 
 </html>
