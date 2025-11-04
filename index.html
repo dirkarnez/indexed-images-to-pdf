@@ -50,6 +50,8 @@
     (() => {
       var listOfFiles = [];
 
+      var isWorking = false;
+
       var imagejsImage;
       // var pdfMake;
 
@@ -377,6 +379,8 @@
       
 
       function createPDF() {
+        isWorking = true;
+        
         Promise.all(
           listOfFiles.map(file => {
             return imagejsImage.load(file.objectURL).then(image => {
@@ -395,6 +399,8 @@
           })
         )
         .then(values => {
+          displayOrder();
+          
           const iframe = document.createElement('iframe');
           iframe.style.borderWidth = "0";
           iframe.frameBorder = "0";
@@ -418,6 +424,9 @@
           stream.on('finish', function () {
             iframe.src = stream.toBlobURL('application/pdf');
           });
+        })
+        .finally(() => {
+          isWorking = false;
         });
       }
 
