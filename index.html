@@ -24,7 +24,7 @@
     />
     <img id="result" /> -->
 
-  <div class="container-fluid p-5">
+  <div class="container p-5">
     <div class="row pb-3">
       <div class="col">
         <a href="https://github.com/dirkarnez/indexed-images-to-pdf"
@@ -39,7 +39,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col" id="my-container">
+      <div class="col" id="my-container" style="max-width: 600px;">
         <!-- <iframe style="border-width: 0" frameBorder="0" scrolling="no"></iframe> -->
       </div>
     </div> 
@@ -152,7 +152,6 @@
         container.innerHTML = "";
 
         const divFlexContainer = document.createElement("div");
-        divFlexContainer.style.width = "70%";
         divFlexContainer.style.display = "flex";
         divFlexContainer.style.backgroundColor = "DodgerBlue";
         divFlexContainer.style.flexDirection = "column";
@@ -161,18 +160,7 @@
         container.appendChild(divFlexContainer);
 
         listOfFiles             
-        .sort((a, b) => {
-          const aNumber = Number(a.index);
-          const bNumber = Number(b.index);
-
-          if (isNaN(aNumber)) {
-            alert("aNumber");
-          }
-          if (isNaN(bNumber)) {
-            alert("bNumber")
-          }
-          return aNumber - bNumber;
-        })
+        .sort(sortFunction)
         .forEach(({objectURL, index}, i) => {
           if (index != i) {
             alert("sorting error");
@@ -180,7 +168,7 @@
           }
           const divWrapper = document.createElement("div");
           divWrapper.style.width = "100%";
-          divWrapper.style.padding = "10px";
+          divWrapper.style.padding = "50px";
           divWrapper.style.position = "relative";
           
           const img = document.createElement("img");
@@ -190,6 +178,7 @@
 
           const divForward = document.createElement("div");
           divForward.style.top = "10px";
+          divForward.style.left = "10px";
           divForward.style.position = "absolute";
           divWrapper.appendChild(divForward);
 
@@ -197,6 +186,7 @@
           buttonForward.innerText = "↑";
           buttonForward.classList.add("btn");
           buttonForward.classList.add("btn-primary");
+          buttonForward.addEventListener("click", () => { forward(index); displayOrder(); });
           buttonForward.disabled = !(index > 0);
           divForward.appendChild(buttonForward);
 
@@ -210,6 +200,7 @@
           buttonBackward.innerText = "↓";
           buttonBackward.classList.add("btn");
           buttonBackward.classList.add("btn-primary");
+          buttonBackward.addEventListener("click", () => {  backward(index); displayOrder(); });
           buttonBackward.disabled = !(index < (listOfFiles.length - 1));
           divBackward.appendChild(buttonBackward);
 
@@ -227,6 +218,57 @@
 
         container.appendChild(divFlexContainer);
         container.appendChild(buttonCreatePDF);
+      }
+
+      function sortFunction(a, b) {
+        const aNumber = Number(a.index);
+        const bNumber = Number(b.index);
+
+        if (isNaN(aNumber)) {
+          alert("aNumber");
+        }
+        if (isNaN(bNumber)) {
+          alert("bNumber")
+        }
+        return aNumber - bNumber;
+      }
+
+      function forward(currentIndex) {
+        if (currentIndex == 0) {
+          return;
+        }
+
+        const isPreviousfile = file => (file.index == currentIndex - 1)
+        const isCurrentFile = file => (file.index == currentIndex)
+
+        listOfFiles = listOfFiles.map((file) => {
+          if (isPreviousfile(file)) {
+            return ({...file, index: currentIndex})
+          } else if (isCurrentFile(file)) {
+            return ({...file, index: currentIndex - 1})
+          } else {
+            return file;
+          }
+        });
+      }
+
+      function backward(currentIndex) {
+        if (currentIndex == listOfFiles.length - 1) {
+          return;
+        }
+
+        const isNextfile = file => (file.index == currentIndex + 1)
+        const isCurrentFile = file => (file.index == currentIndex)
+
+        listOfFiles = listOfFiles.map((file) => {
+          if (isNextfile(file)) {
+            return ({...file, index: currentIndex})
+          } else if (isCurrentFile(file)) {
+            return ({...file, index: currentIndex + 1})
+          } else {
+            return file;
+          }
+        });
       }
 
       function setup() {
@@ -333,7 +375,48 @@
       
 
       function createPDF() {
-        
+        Promise.all(
+          listOfFiles.map(file => {
+            return imagejsImage.load(file.objectURL).then(image => {
+              // make file smaller
+              const finalOutput = image.resize({ ...getResizeParametersForSourceImage(image), interpolation: "nearestNeighbor" });
+              console.log(`finalOutput.width = ${finalOutput.width}, finalOutput.height = ${finalOutput.height}`);
+
+              return ({
+                ...file,
+                content: image.toDataURL("image/jpeg", { useCanvas: true }),
+                width: image.width,
+                height: image.height,
+                shouldBeLandscape: isLandscape(image)
+              });
+            })
+          })
+        )
+        .then(values => {
+          const iframe = document.createElement('iframe');
+          iframe.style.borderWidth = "0";
+          iframe.frameBorder = "0";
+          container.appendChild(iframe);
+
+          var stream = undefined;
+          // slice 1 here because first page is used for PDFDocument constructor
+          const doc = values.slice(1).reduce((doc, current) => {
+            debugger;
+            return doc
+              .addPage({ size: [current.width, current.height] })
+              .image(current.content, 0, 0, { fit: [current.width, current.height], align: 'center', valign: 'center' });
+          }, (() => {
+            var doc = new PDFDocument({ size: [values[0].width, values[0].height] });
+            stream = doc.pipe(blobStream());
+            doc.image(values[0].content, 0, 0, { fit: [values[0].width, values[0].height], align: 'center', valign: 'center' });
+            return doc;
+          })())
+          doc.end();
+
+          stream.on('finish', function () {
+            iframe.src = stream.toBlobURL('application/pdf');
+          });
+        });
       }
 
     })();
