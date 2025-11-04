@@ -190,7 +190,7 @@
           buttonForward.classList.add("btn-primary");
           buttonForward.addEventListener("click", () => { forward(index); displayOrder(); });
           buttonForward.disabled = !(index > 0);
-          divForward.cursor = buttonForward.disabled ? "not-allowed" : "pointer";
+          divForward.style.cursor = buttonForward.disabled ? "not-allowed" : "pointer";
           divForward.appendChild(buttonForward);
 
           const divBackward = document.createElement("div");
@@ -205,7 +205,7 @@
           buttonBackward.classList.add("btn-primary");
           buttonBackward.addEventListener("click", () => {  backward(index); displayOrder(); });
           buttonBackward.disabled = !(index < (listOfFiles.length - 1));
-          divBackward.cursor = buttonBackward.disabled ? "not-allowed" : "pointer";
+          divBackward.style.cursor = buttonBackward.disabled ? "not-allowed" : "pointer";
           divBackward.appendChild(buttonBackward);
 
           divFlexContainer.appendChild(divWrapper);
