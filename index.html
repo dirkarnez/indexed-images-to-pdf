@@ -56,6 +56,7 @@
       // var pdfMake;
 
       const container = document.getElementById("my-container");
+      var buttonCreatePDF = null;
 
       function loadScript(src) {
         return fetch(src)
@@ -211,7 +212,7 @@
           divFlexContainer.appendChild(divWrapper);
         });
 
-        const buttonCreatePDF = document.createElement("button");
+        buttonCreatePDF = document.createElement("button");
         buttonCreatePDF.addEventListener("click", createPDF);
         buttonCreatePDF.innerText = "Create PDF";
         buttonCreatePDF.style.marginTop = "10px";
@@ -381,6 +382,8 @@
       function createPDF() {
         isWorking = true;
         
+        buttonCreatePDF.disabled = true;
+        
         Promise.all(
           listOfFiles.map(file => {
             return imagejsImage.load(file.objectURL).then(image => {
@@ -427,6 +430,7 @@
         })
         .finally(() => {
           isWorking = false;
+          buttonCreatePDF.disabled = false;
         });
       }
 
