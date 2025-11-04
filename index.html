@@ -35,20 +35,25 @@
     </div>
     <div class="row">
       <div class="col">
-        <div class="mb-3">
-          <input class="form-control" type="file" id="input" multiple>
-        </div>
-        <br>
-        <iframe style="border-width: 0" frameBorder="0" scrolling="no"></iframe>
+        <input class="form-control" type="file" id="input" multiple>
       </div>
     </div>
+    <div class="row">
+      <div class="col" id="my-container">
+        <!-- <iframe style="border-width: 0" frameBorder="0" scrolling="no"></iframe> -->
+      </div>
+    </div> 
   </div>
   <script src="./pdfkit.standalone.js"></script>
 
   <script>
     (() => {
+      var listOfFiles = [];
+
       var imagejsImage;
       // var pdfMake;
+
+      const container = document.getElementById("my-container");
 
       function loadScript(src) {
         return fetch(src)
@@ -93,9 +98,9 @@
         //   }
         // })
       ])
-        .then(() => {
-          setup();
-        })
+      .then(() => {
+        setup();
+      })
 
 
       function isSquare(image) {
@@ -130,7 +135,7 @@
         };
       }
 
-      const readAsObjectURL = file => new Promise(resolve => {
+      const readAsObjectURLPromiseFunction = file => new Promise(resolve => {
         const reader = new FileReader();
 
         reader.onload = (event) => {
@@ -143,26 +148,103 @@
         reader.readAsDataURL(file);
       });
 
+      function displayOrder() {
+        container.innerHTML = "";
+
+        const divFlexContainer = document.createElement("div");
+        divFlexContainer.style.width = "70%";
+        divFlexContainer.style.display = "flex";
+        divFlexContainer.style.backgroundColor = "DodgerBlue";
+        divFlexContainer.style.flexDirection = "column";
+        divFlexContainer.style.flexWrap = "wrap";
+
+        container.appendChild(divFlexContainer);
+
+        listOfFiles             
+        .sort((a, b) => {
+          const aNumber = Number(a.index);
+          const bNumber = Number(b.index);
+
+          if (isNaN(aNumber)) {
+            alert("aNumber");
+          }
+          if (isNaN(bNumber)) {
+            alert("bNumber")
+          }
+          return aNumber - bNumber;
+        })
+        .forEach(({objectURL, index}, i) => {
+          if (index != i) {
+            alert("sorting error");
+            return;
+          }
+          const divWrapper = document.createElement("div");
+          divWrapper.style.width = "100%";
+          divWrapper.style.padding = "10px";
+          divWrapper.style.position = "relative";
+          
+          const img = document.createElement("img");
+          img.style.width = "100%";
+          img.src = objectURL;
+          divWrapper.appendChild(img);
+
+          const divForward = document.createElement("div");
+          divForward.style.top = "10px";
+          divForward.style.position = "absolute";
+          divWrapper.appendChild(divForward);
+
+          const buttonForward = document.createElement("button");
+          buttonForward.innerText = "↑";
+          buttonForward.classList.add("btn");
+          buttonForward.classList.add("btn-primary");
+          buttonForward.disabled = !(index > 0);
+          divForward.appendChild(buttonForward);
+
+          const divBackward = document.createElement("div");
+          divBackward.style.top = `10px`;
+          divBackward.style.right = `10px`;
+          divBackward.style.position = "absolute";
+          divWrapper.appendChild(divBackward);
+
+          const buttonBackward = document.createElement("button");
+          buttonBackward.innerText = "↓";
+          buttonBackward.classList.add("btn");
+          buttonBackward.classList.add("btn-primary");
+          buttonBackward.disabled = !(index < (listOfFiles.length - 1));
+          divBackward.appendChild(buttonBackward);
+
+          divFlexContainer.appendChild(divWrapper);
+        });
+
+        const buttonCreatePDF = document.createElement("button");
+        buttonCreatePDF.addEventListener("click", createPDF);
+        buttonCreatePDF.innerText = "Create PDF";
+        buttonCreatePDF.style.marginTop = "10px";
+        buttonCreatePDF.style.width = "100%";
+        buttonCreatePDF.classList.add("btn");
+        buttonCreatePDF.classList.add("btn-primary");
+        buttonCreatePDF.type = "button";
+
+        container.appendChild(divFlexContainer);
+        container.appendChild(buttonCreatePDF);
+      }
+
       function setup() {
         const inputElement = document.getElementById("input");
         inputElement.addEventListener("change", function () {
-          Promise
-            .all(
-              Array
+          listOfFiles = Array
                 .from(this.files)
-                .sort((a, b) => {
-                  const aNumber = Number(a.name.substr(0, a.name.lastIndexOf(".")));
-                  const bNumber = Number(b.name.substr(0, b.name.lastIndexOf(".")));
+                .map((file, i) => ({index: i, objectURL: URL.createObjectURL(file)}))
+          displayOrder();
+        });
+      }
 
-                  if (isNaN(aNumber)) {
-                    alert("aNumber");
-                  }
-                  if (isNaN(bNumber)) {
-                    alert("bNumber")
-                  }
-                  return aNumber - bNumber;
-                })
-                .map(file => readAsObjectURL(file)))
+
+
+/*
+          Promise
+            .all()
+
             .then(values => {
               // pdfMake.fonts = {
               //   Times: {
@@ -209,7 +291,6 @@
                 iframe.src = stream.toBlobURL('application/pdf');
               });
 
-              debugger;
 
 
 
@@ -248,8 +329,13 @@
 
               // pdfMake.createPdf(docDefinition).download('document.pdf');  
             });
-        });
+        });*/
+      
+
+      function createPDF() {
+        
       }
+
     })();
   </script>
 
