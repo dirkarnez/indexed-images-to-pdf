@@ -5,3 +5,6 @@
 
 ### TODOs
 - [x] Sortable on UI
+- [ ] WebAssembly JPEG compression
+  - [AntoineViau/webassembly-jpeg: Read and write jpeg with WebAssembly](https://github.com/AntoineViau/webassembly-jpeg) 
+    - [Demo](https://antoineviau.com/webassembly-jpeg/index.html)
