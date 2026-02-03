@@ -8,7 +8,8 @@
 - [ ] WebAssembly JPEG compression
   - [AntoineViau/webassembly-jpeg: Read and write jpeg with WebAssembly](https://github.com/AntoineViau/webassembly-jpeg) 
     - [Demo](https://antoineviau.com/webassembly-jpeg/index.html)
-- [ ] Binarization
+- [ ] Binarization per image
+  - [Threshold | ImageJS](https://docs.image-js.org/docs/features/operations/threshold/)
   - ```javascript
     function binarizeImage(imageData, threshold) {
       const data = imageData.data;
