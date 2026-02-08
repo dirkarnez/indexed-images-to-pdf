@@ -282,7 +282,7 @@
         inputElement.addEventListener("change", function () {
           listOfFiles = Array
                 .from(this.files)
-                .map((file, i) => ({index: i, objectURL: URL.createObjectURL(file)}))
+                .map((file, i) => ({index: i, file: file, objectURL: URL.createObjectURL(file)}))
           displayOrder();
         });
       }
