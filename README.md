@@ -10,6 +10,8 @@
     - [Demo](https://antoineviau.com/webassembly-jpeg/index.html)
 - [ ] Binarization per image
   - [Threshold | ImageJS](https://docs.image-js.org/docs/features/operations/threshold/)
+  - [AdityaPai2398/CamScanner-In-Python: Build your own document scanner with OpenCV Python](https://github.com/AdityaPai2398/CamScanner-In-Python)
+  - [Document Scanner | OpenCV - YouTube](https://www.youtube.com/watch?v=W3DzSm8WI1g)
   - ```javascript
     function binarizeImage(imageData, threshold) {
       const data = imageData.data;
